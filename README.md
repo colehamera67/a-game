@@ -4,10 +4,23 @@ A Java-based zombie survival MMO with RuneScape-inspired skill progression and g
 
 ## Game Modes
 
-**NEW!** The game now supports both graphical and text-based interfaces:
+**BRAND NEW!** The game now supports THREE different play modes:
 
-### 🎮 GUI Mode (Recommended)
-- Beautiful graphical interface with visual game map
+### 🎮 3D Mode (NEWEST!)
+- **Full 3D graphics** powered by jMonkeyEngine
+- Immersive first-person perspective
+- Real-time 3D rendering of zombies, resources, and terrain
+- Dynamic lighting and shadows
+- 3D models for all entities
+- Free camera movement with mouse look
+- WASD movement controls
+- On-screen HUD with live stats
+- Zone-specific terrain coloring
+- Smooth 3D animations
+
+### 🖼️ 2D GUI Mode (Classic GUI)
+- Beautiful 2D graphical interface with visual game map
+- Top-down grid view
 - Real-time display of zombies, resources, and player
 - Interactive panels for stats, skills, and inventory
 - Color-coded zones and entity types
@@ -15,11 +28,11 @@ A Java-based zombie survival MMO with RuneScape-inspired skill progression and g
 - Mouse and keyboard controls (WASD movement)
 - Action log with color-coded messages
 
-### 💻 CLI Mode (Classic)
+### 💻 CLI Mode (Text-Based)
 - Text-based command-line interface
 - Traditional menu-driven gameplay
 - Numbered command selection
-- Full feature parity with GUI mode
+- Full feature parity with GUI modes
 
 ## Features
 
@@ -107,7 +120,7 @@ mvn clean package
 
 3. Run the game:
 
-**GUI Mode (default):**
+**3D Mode (default):**
 ```bash
 java -jar target/zombie-mmo-1.0.0.jar
 ```
@@ -117,29 +130,52 @@ Or with Maven:
 mvn exec:java -Dexec.mainClass="com.zombiemmo.GameLauncher"
 ```
 
-**CLI Mode:**
+**Specific Modes:**
 ```bash
+# 3D Mode
+java -jar target/zombie-mmo-1.0.0.jar --3d
+
+# 2D GUI Mode
+java -jar target/zombie-mmo-1.0.0.jar --2d
+
+# CLI Mode
 java -jar target/zombie-mmo-1.0.0.jar --cli
 ```
 
 Or with Maven:
 ```bash
+mvn exec:java -Dexec.mainClass="com.zombiemmo.GameLauncher" -Dexec.args="--3d"
+mvn exec:java -Dexec.mainClass="com.zombiemmo.GameLauncher" -Dexec.args="--2d"
 mvn exec:java -Dexec.mainClass="com.zombiemmo.GameLauncher" -Dexec.args="--cli"
 ```
 
 **In IntelliJ IDEA:**
 1. Open `GameLauncher.java`
 2. Right-click → Run 'GameLauncher.main()'
-3. Choose GUI or CLI mode when prompted
+3. Choose game mode: 3D, 2D GUI, or CLI when prompted
 
 ## How to Play
 
 ### Starting Out
-1. Launch the game and choose GUI or CLI mode
+1. Launch the game and choose your mode: 3D, 2D GUI, or CLI
 2. Enter your username
 3. You spawn in **Safe Haven** at position (25, 25)
 
-### GUI Mode Controls
+### 3D Mode Controls
+- **WASD Keys** - Move forward/backward and strafe left/right
+- **Mouse** - Look around (free camera)
+- **Mouse Drag** - Rotate camera
+- **ESC** - Pause/Menu
+- **HUD** - Top-left shows zone and username
+- **Stats Display** - Top-right shows HP, infection, combat level, total level, position
+- **Visual Elements**:
+  - Blue sphere = You (the player)
+  - Colored spheres = Zombies (green=walker, yellow=runner, red=tank/boss)
+  - Small cubes = Resources (brown=trees, gray=rocks, blue=water, light green=plants)
+  - Ground color = Zone danger level (green=safe, red=dangerous)
+  - Lighting = Dynamic sun and ambient lighting
+
+### 2D GUI Mode Controls
 - **WASD Keys or Arrow Buttons** - Move in cardinal directions
 - **⚔ Attack Button** - Engage in combat with nearby zombies
 - **⛏ Gather Button** - Collect resources from nearby nodes
