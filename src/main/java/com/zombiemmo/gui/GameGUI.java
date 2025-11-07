@@ -99,10 +99,10 @@ public class GameGUI extends JFrame {
 
     private void setupEventHandlers() {
         // Movement buttons
-        controlPanel.getMoveNorthButton().addActionListener(e -> move(0, -5));
-        controlPanel.getMoveSouthButton().addActionListener(e -> move(0, 5));
-        controlPanel.getMoveWestButton().addActionListener(e -> move(-5, 0));
-        controlPanel.getMoveEastButton().addActionListener(e -> move(5, 0));
+        controlPanel.getMoveNorthButton().addActionListener(e -> movePlayer(0, -5));
+        controlPanel.getMoveSouthButton().addActionListener(e -> movePlayer(0, 5));
+        controlPanel.getMoveWestButton().addActionListener(e -> movePlayer(-5, 0));
+        controlPanel.getMoveEastButton().addActionListener(e -> movePlayer(5, 0));
 
         // Action buttons
         controlPanel.getAttackButton().addActionListener(e -> handleAttack());
@@ -113,10 +113,10 @@ public class GameGUI extends JFrame {
         // Keyboard shortcuts
         controlPanel.setupKeyboardShortcuts(
             this,
-            () -> move(0, -5),
-            () -> move(0, 5),
-            () -> move(-5, 0),
-            () -> move(5, 0)
+            () -> movePlayer(0, -5),
+            () -> movePlayer(0, 5),
+            () -> movePlayer(-5, 0),
+            () -> movePlayer(5, 0)
         );
 
         // Window closing
@@ -156,7 +156,7 @@ public class GameGUI extends JFrame {
         }
     }
 
-    private void move(int dx, int dy) {
+    private void movePlayer(int dx, int dy) {
         Position currentPos = player.getPosition();
         Position newPos = new Position(currentPos.getX() + dx, currentPos.getY() + dy);
 
