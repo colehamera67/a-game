@@ -2,6 +2,25 @@
 
 A Java-based zombie survival MMO with RuneScape-inspired skill progression and gameplay mechanics.
 
+## Game Modes
+
+**NEW!** The game now supports both graphical and text-based interfaces:
+
+### 🎮 GUI Mode (Recommended)
+- Beautiful graphical interface with visual game map
+- Real-time display of zombies, resources, and player
+- Interactive panels for stats, skills, and inventory
+- Color-coded zones and entity types
+- Health bars and visual feedback
+- Mouse and keyboard controls (WASD movement)
+- Action log with color-coded messages
+
+### 💻 CLI Mode (Classic)
+- Text-based command-line interface
+- Traditional menu-driven gameplay
+- Numbered command selection
+- Full feature parity with GUI mode
+
 ## Features
 
 ### Skills System (RuneScape-Style)
@@ -87,24 +106,56 @@ mvn clean package
 ```
 
 3. Run the game:
+
+**GUI Mode (default):**
 ```bash
 java -jar target/zombie-mmo-1.0.0.jar
 ```
 
-Or use Maven directly:
+Or with Maven:
 ```bash
 mvn exec:java -Dexec.mainClass="com.zombiemmo.GameLauncher"
 ```
 
+**CLI Mode:**
+```bash
+java -jar target/zombie-mmo-1.0.0.jar --cli
+```
+
+Or with Maven:
+```bash
+mvn exec:java -Dexec.mainClass="com.zombiemmo.GameLauncher" -Dexec.args="--cli"
+```
+
+**In IntelliJ IDEA:**
+1. Open `GameLauncher.java`
+2. Right-click → Run 'GameLauncher.main()'
+3. Choose GUI or CLI mode when prompted
+
 ## How to Play
 
 ### Starting Out
-1. Launch the game and enter your username
-2. You start in **Safe Haven** at position (25, 25)
-3. Check your skills with option 5
-4. Look around with option 2 to see nearby resources and zombies
+1. Launch the game and choose GUI or CLI mode
+2. Enter your username
+3. You spawn in **Safe Haven** at position (25, 25)
 
-### Basic Commands
+### GUI Mode Controls
+- **WASD Keys or Arrow Buttons** - Move in cardinal directions
+- **⚔ Attack Button** - Engage in combat with nearby zombies
+- **⛏ Gather Button** - Collect resources from nearby nodes
+- **❤ Rest Button** - Restore health (reduces infection in Safe Haven)
+- **👁 Look Around Button** - See detailed information about your surroundings
+- **Tabs** - Switch between Stats, Skills, and Inventory views
+- **Map** - Shows your position (blue circle), zombies (colored), and resources (squares)
+- **Color Coding**:
+  - Green zones = Safe areas
+  - Red zones = Dangerous areas
+  - Brown squares = Trees (Woodcutting)
+  - Gray squares = Rocks (Mining)
+  - Blue squares = Fishing spots
+  - Light green squares = Plants (Foraging)
+
+### CLI Mode Commands
 - **1. Move** - Move in cardinal directions (W/A/S/D)
 - **2. Look Around** - See nearby zombies and resources
 - **3. Attack Zombie** - Engage in combat with nearby zombies
@@ -204,7 +255,15 @@ Combat Level = Base + Max(Melee, Ranged, Magic)
 ```
 src/main/java/com/zombiemmo/
 ├── combat/          - Combat system and calculations
-├── client/          - Game client and UI
+├── client/          - CLI game client
+├── gui/             - GUI components and panels
+│   ├── GameGUI.java       - Main GUI window
+│   ├── GamePanel.java     - Visual game map
+│   ├── StatsPanel.java    - Player stats display
+│   ├── SkillsPanel.java   - Skills display
+│   ├── InventoryPanel.java - Inventory display
+│   ├── ActionLogPanel.java - Message log
+│   └── ControlPanel.java   - Control buttons
 ├── entity/          - Players, zombies, and entities
 ├── item/            - Items and inventory system
 ├── network/         - Network messages (for future multiplayer)
@@ -212,7 +271,7 @@ src/main/java/com/zombiemmo/
 ├── server/          - Game server and world management
 ├── skill/           - Skill system and progression
 ├── world/           - Game world and zones
-└── GameLauncher.java - Main entry point
+└── GameLauncher.java - Main entry point (CLI/GUI selection)
 ```
 
 ## Future Enhancements
