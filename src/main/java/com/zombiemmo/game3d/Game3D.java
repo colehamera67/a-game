@@ -34,6 +34,7 @@ public class Game3D extends SimpleApplication implements ActionListener {
     private Node zombiesNode;
     private Node resourcesNode;
     private Node terrainNode;
+    private Node effectsNode;
 
     // HUD elements
     private BitmapText hudText;
@@ -45,6 +46,12 @@ public class Game3D extends SimpleApplication implements ActionListener {
     private boolean moveBackward = false;
     private boolean moveLeft = false;
     private boolean moveRight = false;
+
+    // Systems
+    private ModelFactory modelFactory;
+    private AnimationController playerAnimController;
+    private ParticleEffects particleEffects;
+    private java.util.Map<Zombie, AnimationController> zombieAnimControllers;
 
     private static final float MOVE_SPEED = 10f;
     private static final float TILE_SIZE = 2f;
@@ -70,6 +77,12 @@ public class Game3D extends SimpleApplication implements ActionListener {
 
     @Override
     public void simpleInitApp() {
+        // Initialize systems
+        modelFactory = new ModelFactory(assetManager);
+        playerAnimController = new AnimationController();
+        particleEffects = new ParticleEffects(assetManager);
+        zombieAnimControllers = new java.util.HashMap<>();
+
         // Initialize input
         initKeys();
 
@@ -91,6 +104,9 @@ public class Game3D extends SimpleApplication implements ActionListener {
 
         resourcesNode = new Node("Resources");
         rootNode.attachChild(resourcesNode);
+
+        effectsNode = new Node("Effects");
+        rootNode.attachChild(effectsNode);
 
         // Build world
         buildTerrain();
@@ -180,20 +196,9 @@ public class Game3D extends SimpleApplication implements ActionListener {
     }
 
     private void createPlayer() {
-        // Create player model (blue sphere)
-        Sphere playerMesh = new Sphere(32, 32, 0.8f);
-        Geometry playerGeom = new Geometry("PlayerModel", playerMesh);
-
-        Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-        mat.setBoolean("UseMaterialColors", true);
-        mat.setColor("Diffuse", new ColorRGBA(0.2f, 0.5f, 1f, 1f)); // Blue
-        mat.setColor("Ambient", new ColorRGBA(0.2f, 0.5f, 1f, 1f));
-        mat.setColor("Specular", ColorRGBA.White);
-        mat.setFloat("Shininess", 64f);
-        playerGeom.setMaterial(mat);
-
-        playerGeom.setLocalTranslation(0, 1, 0);
-        playerNode.attachChild(playerGeom);
+        // Create humanoid player model
+        Node playerModel = modelFactory.createPlayerModel();
+        playerNode.attachChild(playerModel);
 
         updatePlayerPosition();
     }
@@ -279,25 +284,40 @@ public class Game3D extends SimpleApplication implements ActionListener {
             return; // Too far, don't render
         }
 
-        // Create zombie model (colored sphere based on type)
-        Sphere zombieMesh = new Sphere(16, 16, 0.6f);
-        Geometry zombieGeom = new Geometry("Zombie_" + System.identityHashCode(zombie), zombieMesh);
-
-        Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-        mat.setBoolean("UseMaterialColors", true);
-
+        // Get zombie color and size based on type
         ColorRGBA zombieColor = getZombieColor(zombie);
-        mat.setColor("Diffuse", zombieColor);
-        mat.setColor("Ambient", zombieColor);
-        mat.setColor("Specular", ColorRGBA.White.mult(0.5f));
-        mat.setFloat("Shininess", 32f);
-        zombieGeom.setMaterial(mat);
+        float size = getZombieSize(zombie);
+
+        // Create zombie model with humanoid shape
+        Node zombieModel = modelFactory.createZombieModel(zombieColor, size);
+        zombieModel.setName("Zombie_" + System.identityHashCode(zombie));
 
         float x = pos.getX() * TILE_SIZE;
         float z = pos.getY() * TILE_SIZE;
-        zombieGeom.setLocalTranslation(x, 1, z);
+        zombieModel.setLocalTranslation(x, 0, z);
 
-        zombiesNode.attachChild(zombieGeom);
+        // Create or get animation controller for this zombie
+        AnimationController animController = zombieAnimControllers.get(zombie);
+        if (animController == null) {
+            animController = new AnimationController();
+            zombieAnimControllers.put(zombie, animController);
+        }
+
+        zombiesNode.attachChild(zombieModel);
+    }
+
+    private float getZombieSize(Zombie zombie) {
+        switch (zombie.getType()) {
+            case TANK:
+            case BLOATER:
+                return 1.3f;
+            case BOSS:
+                return 1.8f;
+            case WALKER:
+                return 0.9f;
+            default:
+                return 1.0f;
+        }
     }
 
     private ColorRGBA getZombieColor(Zombie zombie) {
@@ -337,23 +357,49 @@ public class Game3D extends SimpleApplication implements ActionListener {
             return;
         }
 
-        // Create resource model (small box)
-        Box resourceBox = new Box(0.5f, 0.5f, 0.5f);
-        Geometry resourceGeom = new Geometry("Resource_" + System.identityHashCode(resource), resourceBox);
+        // Create appropriate model based on resource type
+        Node resourceModel;
+        switch (resource.getType().getRequiredSkill()) {
+            case WOODCUTTING:
+                resourceModel = modelFactory.createTreeModel(2f + (float) Math.random());
+                break;
+            case MINING:
+                ColorRGBA rockColor = getResourceColor(resource);
+                resourceModel = modelFactory.createRockModel(rockColor);
+                break;
+            case FISHING:
+                resourceModel = modelFactory.createWaterModel();
+                break;
+            case FORAGING:
+                resourceModel = modelFactory.createPlantModel();
+                break;
+            default:
+                // Fallback to simple box
+                Box resourceBox = new Box(0.5f, 0.5f, 0.5f);
+                Geometry fallback = new Geometry("Resource", resourceBox);
+                Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
+                mat.setBoolean("UseMaterialColors", true);
+                ColorRGBA resourceColor = getResourceColor(resource);
+                mat.setColor("Diffuse", resourceColor);
+                mat.setColor("Ambient", resourceColor);
+                fallback.setMaterial(mat);
 
-        Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-        mat.setBoolean("UseMaterialColors", true);
+                resourceModel = new Node("ResourceNode");
+                resourceModel.attachChild(fallback);
+                break;
+        }
 
-        ColorRGBA resourceColor = getResourceColor(resource);
-        mat.setColor("Diffuse", resourceColor);
-        mat.setColor("Ambient", resourceColor);
-        resourceGeom.setMaterial(mat);
-
+        resourceModel.setName("Resource_" + System.identityHashCode(resource));
         float x = pos.getX() * TILE_SIZE;
         float z = pos.getY() * TILE_SIZE;
-        resourceGeom.setLocalTranslation(x, 0.5f, z);
+        resourceModel.setLocalTranslation(x, 0, z);
 
-        resourcesNode.attachChild(resourceGeom);
+        // Fade out if depleted
+        if (resource.isDepleted()) {
+            resourceModel.setLocalScale(0.7f);
+        }
+
+        resourcesNode.attachChild(resourceModel);
     }
 
     private ColorRGBA getResourceColor(ResourceNode resource) {
@@ -406,8 +452,18 @@ public class Game3D extends SimpleApplication implements ActionListener {
     @Override
     public void simpleUpdate(float tpf) {
         // Update player movement
-        if (moveForward || moveBackward || moveLeft || moveRight) {
+        boolean isMoving = moveForward || moveBackward || moveLeft || moveRight;
+        if (isMoving) {
             handleMovement(tpf);
+        }
+
+        // Update player animation
+        Node playerModel = (Node) playerNode.getChild(0);
+        if (playerModel != null) {
+            AnimationController.AnimationType anim = isMoving ?
+                AnimationController.AnimationType.WALKING :
+                AnimationController.AnimationType.IDLE;
+            playerAnimController.animateHumanoid(playerModel, anim, tpf);
         }
 
         // Update game world
@@ -418,6 +474,22 @@ public class Game3D extends SimpleApplication implements ActionListener {
         updateResources();
         updatePlayerPosition();
         updateHUD();
+
+        // Update zombie animations
+        for (Zone zone : server.getWorld().getZones()) {
+            for (Zombie zombie : zone.getZombies()) {
+                if (!zombie.isAlive()) continue;
+
+                String zombieName = "Zombie_" + System.identityHashCode(zombie);
+                Node zombieModel = (Node) zombiesNode.getChild(zombieName);
+                if (zombieModel != null) {
+                    AnimationController animController = zombieAnimControllers.get(zombie);
+                    if (animController != null) {
+                        animController.animateZombieShamble(zombieModel, tpf);
+                    }
+                }
+            }
+        }
     }
 
     private void handleMovement(float tpf) {
